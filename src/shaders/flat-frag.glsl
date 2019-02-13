@@ -296,8 +296,15 @@ float sdWater( vec3 p)
 bool intersectsBuoy(vec3 ro, vec3 rd)
 {
 	vec3 min = vec3(-1.4, 0.0, -1.4);
-	vec3 max = vec3(1.4, 4.25, 1.4);
+	vec3 max = vec3(1.4, 5.25, 1.4);
 	return intersects(ro, rd, min, max); 
+}
+
+float sdBox( vec3 p, vec3 b )
+{
+  vec3 d = abs(p) - b;
+  return length(max(d,0.0))
+         + min(max(d.x,max(d.y,d.z)),0.0); // remove this line for an only partially signed sdf 
 }
 
 float sdBuoy(vec3 p)
@@ -441,14 +448,14 @@ vec3 renderSky( in vec3 ro, in vec3 rd )
     vec3 col = 0.9*vec3(0.4,0.65,1.0) - rd.y*vec3(0.4,0.36,0.4);
 
     // clouds
-    float t = (50.0-ro.y)/rd.y;
-    if( t>0.0 )
-    {
+    float t = (1000.0-ro.y)/(1.0 - rd.y);
+    // if( t>0.0 )
+    // {
         vec2 uv = (ro+t*rd).xz;
         float cl = fbm_9( uv*0.002 );
         float dl = smoothstep(-0.2,0.6,cl);
         col = mix( col, vec3(1.0), 0.4*dl );
-    }
+    // }
     
 	// sun glare    
     float sun = clamp( dot(KEYLIGHT,rd), 0.0, 1.0 );
@@ -456,6 +463,7 @@ vec3 renderSky( in vec3 ro, in vec3 rd )
     
 	return col;
 }
+
 
 void main() {
   float len = distance(u_Ref, u_Eye);
@@ -481,7 +489,8 @@ void main() {
 		{
 			case WATER:
 				float t = pow(dot(norm, normalize(KEYLIGHT)), 4.0);
-				diffuseColor = mix(vec4(0.01, 0.1, 0.2, 1.0), vec4(1.0, 1.0, 1.0, 1.0), t);
+                float fresnel = pow(dot(dir, normalize(vec3(dir.x, 0.0, dir.z))), 64.0);
+				diffuseColor = mix(vec4(0.01, 0.1, 0.2, 1.0), vec4(1.0, 1.0, 1.0, 1.0), max(fresnel, t));
 				break;
 			case BUOY:
 				diffuseColor = vec4(0.2, 0.01, 0.01, 1.0);
@@ -493,6 +502,7 @@ void main() {
 		float bac = clamp(dot(norm, normalize(KEYLIGHT*vec3(-1.0,0.0,-1.0)) ), 0.0, 1.0 );
 		float sky = 0.5 + 0.5*norm.y;
 		float occ = ambientOcclusion(p);//pow( (1.0-displacement(pos*vec3(0.8,1.0,0.8)))*1.6-0.5, 2.0 );
+
 
 		float amb = 1.0;
 
@@ -506,22 +516,10 @@ void main() {
 
 		col *= lin;
 		out_Col = vec4(col, 1.0);
-
-
-		// vec3 lightDir = vec3(.0, 0.0, -1.0);
-		// // Calculate the diffuse term for Lambert shading
-		// float diffuseTerm = dot(norm, normalize(lightDir));
-		// diffuseTerm = clamp(diffuseTerm, 0.0f, 1.0f);
-		// float ambientTerm = 0.3;
-		// float lightIntensity = diffuseTerm + ambientTerm;
-		// diffuseColor = vec4(pow(diffuseColor.rgb * lightIntensity, vec3(1.0/2.2)), diffuseColor.a);
-		// out_Col = diffuseColor;
     }
     else
     {
     	// sky
-    	// vec3 col = vec3(0.5 * (dir + 1.0));
     	out_Col = vec4(renderSky(u_Eye, dir), 1.0);
     }
 }
-

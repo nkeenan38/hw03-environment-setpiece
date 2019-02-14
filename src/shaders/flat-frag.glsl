@@ -489,8 +489,8 @@ void main() {
 		{
 			case WATER:
 				float t = pow(dot(norm, normalize(KEYLIGHT)), 4.0);
-                float fresnel = pow(dot(dir, normalize(vec3(dir.x, 0.0, dir.z))), 64.0);
-				diffuseColor = mix(vec4(0.01, 0.1, 0.2, 1.0), vec4(1.0, 1.0, 1.0, 1.0), max(fresnel, t));
+                float fresnel = pow(dot(dir, normalize(vec3(dir.x, 0.0, dir.z))), 72.0);
+				diffuseColor = mix(vec4(0.01, 0.125, 0.2, 1.0), vec4(0.1, 0.6, 0.8, 1.0), max(fresnel, t));
 				break;
 			case BUOY:
 				diffuseColor = vec4(0.2, 0.01, 0.01, 1.0);
